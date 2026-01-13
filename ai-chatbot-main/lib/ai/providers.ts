@@ -33,7 +33,7 @@ export function getLanguageModel(modelId: string) {
   }
 
   // ВАЖЛИВО: Видаляємо "openai/", щоб Groq зрозумів назву моделі
-  const modelName = modelId.split('/')[1] || modelId;
+  const modelName = modelId.includes('/') ? modelId.split('/')[1] : modelId;
 
   const isReasoningModel =
     modelId.includes("reasoning") || modelId.endsWith("-thinking");
@@ -51,12 +51,12 @@ export function getTitleModel() {
     return myProvider.languageModel("title-model");
   }
   // Тут використовуємо чисту назву моделі з .env
-  return groqProvider.languageModel(process.env.OPENAI_MODEL || "llama3-8b-8192");
+  return groqProvider.languageModel(process.env.NEXT_PUBLIC_MODEL || "llama-3.3-70b-versatile");
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  return groqProvider.languageModel(process.env.OPENAI_MODEL || "llama3-8b-8192");
+  return groqProvider.languageModel(process.env.NEXT_PUBLIC_MODEL || "llama-3.3-70b-versatile");
 }
