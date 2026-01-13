@@ -29,7 +29,7 @@ export const myProvider = isTestEnvironment
 
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel(modelId);
+    return myProvider.languageModel(modelId) as any;
   }
 
   const modelName = modelId.split('/')[1] || modelId;
@@ -39,22 +39,22 @@ export function getLanguageModel(modelId: string) {
 
   if (isReasoningModel) {
     const providerModelId = modelName.replace(/-thinking$/, "");
-    return groqProvider.languageModel(providerModelId);
+    return groqProvider.languageModel(providerModelId) as any;
   }
 
-  return groqProvider.languageModel(modelName);
+  return groqProvider.languageModel(modelName) as any;
 }
 
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel("title-model");
+    return myProvider.languageModel("title-model") as any;
   }
-  return groqProvider.languageModel(process.env.OPENAI_MODEL || "gpt-4");
+  return groqProvider.languageModel(process.env.OPENAI_MODEL || "gpt-4") as any;
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel("artifact-model");
+    return myProvider.languageModel("artifact-model") as any;
   }
-  return groqProvider.languageModel(process.env.OPENAI_MODEL || "gpt-4");
+  return groqProvider.languageModel(process.env.OPENAI_MODEL || "gpt-4") as any;
 }
