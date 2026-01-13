@@ -2,7 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { customProvider } from "ai";
 import { isTestEnvironment } from "../constants";
 
-// Initialize groqProvider with OpenAI-compatible endpoint
+// Ініціалізація провайдера для Groq
 const groqProvider = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: process.env.OPENAI_BASE_URL,
@@ -29,9 +29,10 @@ export const myProvider = isTestEnvironment
 
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel(modelId) as any;
+    return myProvider.languageModel(modelId);
   }
 
+  // ВАЖЛИВО: Видаляємо "openai/", щоб Groq зрозумів назву моделі
   const modelName = modelId.split('/')[1] || modelId;
 
   const isReasoningModel =
@@ -39,22 +40,23 @@ export function getLanguageModel(modelId: string) {
 
   if (isReasoningModel) {
     const providerModelId = modelName.replace(/-thinking$/, "");
-    return groqProvider.languageModel(providerModelId) as any;
+    return groqProvider.languageModel(providerModelId);
   }
 
-  return groqProvider.languageModel(modelName) as any;
+  return groqProvider.languageModel(modelName);
 }
 
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel("title-model") as any;
+    return myProvider.languageModel("title-model");
   }
-  return groqProvider.languageModel(process.env.OPENAI_MODEL || "gpt-4") as any;
+  // Тут використовуємо чисту назву моделі з .env
+  return groqProvider.languageModel(process.env.OPENAI_MODEL || "llama3-8b-8192");
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel("artifact-model") as any;
+    return myProvider.languageModel("artifact-model");
   }
-  return groqProvider.languageModel(process.env.OPENAI_MODEL || "gpt-4") as any;
+  return groqProvider.languageModel(process.env.OPENAI_MODEL || "llama3-8b-8192");
 }
