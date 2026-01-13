@@ -32,15 +32,17 @@ export function getLanguageModel(modelId: string) {
     return myProvider.languageModel(modelId);
   }
 
+  const modelName = modelId.split('/')[1] || modelId;
+
   const isReasoningModel =
     modelId.includes("reasoning") || modelId.endsWith("-thinking");
 
   if (isReasoningModel) {
-    const providerModelId = modelId.replace(/-thinking$/, "");
+    const providerModelId = modelName.replace(/-thinking$/, "");
     return groqProvider.languageModel(providerModelId);
   }
 
-  return groqProvider.languageModel(modelId);
+  return groqProvider.languageModel(modelName);
 }
 
 export function getTitleModel() {
