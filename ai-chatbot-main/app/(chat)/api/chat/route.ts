@@ -77,6 +77,9 @@ export async function POST(request: Request) {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
+    // DEBUG: Log selected model at the start of POST request
+    console.log('Selected Model:', selectedChatModel);
+
     const session = await auth();
 
     if (!session?.user) {
@@ -126,6 +129,10 @@ export async function POST(request: Request) {
     const uiMessages = isToolApprovalFlow
       ? (messages as ChatMessage[])
       : [...convertToUIMessages(messagesFromDb), message as ChatMessage];
+
+    console.log('UI Messages count:', uiMessages.length);
+    console.log('Messages from DB count:', messagesFromDb.length);
+    console.log('Is tool approval flow:', isToolApprovalFlow);
 
     const { longitude, latitude, city, country } = geolocation(request);
 
@@ -184,9 +191,9 @@ export async function POST(request: Request) {
                 "updateDocument",
                 "requestSuggestions",
               ],
-          experimental_transform: isReasoningModel
-            ? undefined
-            : smoothStream({ chunking: "word" }),
+          // experimental_transform: isReasoningModel
+          //   ? undefined
+          //   : smoothStream({ chunking: "word" }),
           providerOptions: isReasoningModel
             ? {
                 anthropic: {

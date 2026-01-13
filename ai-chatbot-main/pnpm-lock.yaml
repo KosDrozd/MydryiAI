@@ -11,6 +11,9 @@ importers:
       '@ai-sdk/gateway':
         specifier: 2.0.0-beta.85
         version: 2.0.0-beta.85(zod@3.25.76)
+      '@ai-sdk/groq':
+        specifier: ^3.0.6
+        version: 3.0.6(zod@3.25.76)
       '@ai-sdk/openai':
         specifier: ^3.0.9
         version: 3.0.9(zod@3.25.76)
@@ -308,6 +311,12 @@ packages:
 
   '@ai-sdk/gateway@2.0.0-beta.85':
     resolution: {integrity: sha512-1LFCTwweCe1KWyBR/v64zbvNJbAu4JPooa+0JVUclcb90RYQH2FDIQCbxN4H6J8is4yaTkHW5tbLNjHpOkxZuA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/groq@3.0.6':
+    resolution: {integrity: sha512-FPeC5bHUUjEc2y0j6Phw+yqEEZnnaUB7ot0dhnNsFlcC3hO4ToYd2atyq803v90QCU00mXiOWlk7m5iN0+Sz9Q==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -4469,6 +4478,12 @@ snapshots:
       '@ai-sdk/provider': 3.0.0-beta.27
       '@ai-sdk/provider-utils': 4.0.0-beta.53(zod@3.25.76)
       '@vercel/oidc': 3.0.5
+      zod: 3.25.76
+
+  '@ai-sdk/groq@3.0.6(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.2
+      '@ai-sdk/provider-utils': 4.0.5(zod@3.25.76)
       zod: 3.25.76
 
   '@ai-sdk/openai@3.0.9(zod@3.25.76)':
