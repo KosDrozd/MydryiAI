@@ -1,6 +1,6 @@
 // Use NEXT_PUBLIC_MODEL environment variable from .env.local
 // This uses NEXT_PUBLIC_ prefix to ensure client-side accessibility
-const MODEL_ID = process.env.NEXT_PUBLIC_MODEL || 'llama-3.3-70b-versatile';
+const MODEL_ID = process.env.NEXT_PUBLIC_MODEL;
 
 export const DEFAULT_CHAT_MODEL = `openai/${MODEL_ID}`;
 
@@ -16,7 +16,7 @@ export const chatModels: ChatModel[] = [
     id: `openai/${MODEL_ID}`,
     name: "Мудрий ШІ",
     provider: "openai",
-    description: "Надшвидка модель на базі Llama 3",
+    description: "Надшвидка модель на базі Llama 3.1",
   },
 ];
 
