@@ -133,6 +133,8 @@ export async function POST(request: Request) {
     console.log('UI Messages count:', uiMessages.length);
     console.log('Messages from DB count:', messagesFromDb.length);
     console.log('Is tool approval flow:', isToolApprovalFlow);
+    console.log('Chat ID:', id);
+    console.log('New message role:', message?.role);
 
     const { longitude, latitude, city, country } = geolocation(request);
 
@@ -178,10 +180,16 @@ export async function POST(request: Request) {
           selectedChatModel.includes("reasoning") ||
           selectedChatModel.includes("thinking");
 
+        console.log('🚀 About to call streamText with:');
+        console.log('  Model:', selectedChatModel);
+        console.log('  UI Messages for conversion:', uiMessages.length);
+        
+        const modelMessages = await convertToModelMessages(uiMessages);
+
         const result = streamText({
           model: getLanguageModel(selectedChatModel) as any,
           system: systemPrompt({ selectedChatModel, requestHints }),
-          messages: await convertToModelMessages(uiMessages),
+          messages: modelMessages,
           stopWhen: stepCountIs(5),
           experimental_activeTools: isReasoningModel
             ? []
@@ -191,9 +199,6 @@ export async function POST(request: Request) {
                 "updateDocument",
                 "requestSuggestions",
               ],
-          // experimental_transform: isReasoningModel
-          //   ? undefined
-          //   : smoothStream({ chunking: "word" }),
           providerOptions: isReasoningModel
             ? {
                 anthropic: {
