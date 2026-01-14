@@ -71,8 +71,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   setOpenMobile(false);
                 }}
               >
-                <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                  Chatbot
+                <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted bg-gradient-to-r from-blue-600 to-yellow-500 bg-clip-text text-transparent">
+                  UkraineBot 🇺🇦
                 </span>
               </Link>
               <div className="flex flex-row gap-1">
@@ -89,7 +89,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent align="end" className="hidden md:block">
-                      Delete All Chats
+                      Видалити всі чати
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -135,9 +135,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteAll}>
-              Delete All
+              Видалити все
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

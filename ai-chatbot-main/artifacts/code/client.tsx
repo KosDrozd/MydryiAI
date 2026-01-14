@@ -69,7 +69,7 @@ type Metadata = {
 export const codeArtifact = new Artifact<"code", Metadata>({
   kind: "code",
   description:
-    "Useful for code generation; Code execution is only available for python code.",
+    "Корисно для генерування коду; Виконання коду доступне лише для коду Python.",
   initialize: ({ setMetadata }) => {
     setMetadata({
       outputs: [],
@@ -114,8 +114,8 @@ export const codeArtifact = new Artifact<"code", Metadata>({
   actions: [
     {
       icon: <PlayIcon size={18} />,
-      label: "Run",
-      description: "Execute code",
+      label: "Ми",
+      description: "Виконати код",
       onClick: async ({ content, setMetadata }) => {
         const runId = generateUUID();
         const outputContent: ConsoleOutputContent[] = [];
@@ -210,7 +210,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     },
     {
       icon: <UndoIcon size={18} />,
-      description: "View Previous version",
+      description: "Переглянути попередню версію",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("prev");
       },
@@ -224,7 +224,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     },
     {
       icon: <RedoIcon size={18} />,
-      description: "View Next version",
+      description: "Переглянути наступну версію",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("next");
       },
@@ -238,24 +238,24 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     },
     {
       icon: <CopyIcon size={18} />,
-      description: "Copy code to clipboard",
+      description: "Копіювати код в буфер обміну",
       onClick: ({ content }) => {
         navigator.clipboard.writeText(content);
-        toast.success("Copied to clipboard!");
+        toast.success("Скопійовано в буфер обміну!");
       },
     },
   ],
   toolbar: [
     {
       icon: <MessageIcon />,
-      description: "Add comments",
+      description: "\u0414\u043e\u0434\u0430\u0442\u0438 \u043a\u043e\u043c\u0435\u043d\u0442\u0430\u0440\u0456",
       onClick: ({ sendMessage }) => {
         sendMessage({
           role: "user",
           parts: [
             {
               type: "text",
-              text: "Add comments to the code snippet for understanding",
+              text: "Додай коментарі до фрагмента коду, щоб полегшити розуміння.",
             },
           ],
         });
@@ -263,14 +263,14 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     },
     {
       icon: <LogsIcon />,
-      description: "Add logs",
+      description: "\u0414\u043e\u0434\u0430\u0442\u0438 \u043b\u043e\u0433\u0438",
       onClick: ({ sendMessage }) => {
         sendMessage({
           role: "user",
           parts: [
             {
               type: "text",
-              text: "Add logs to the code snippet for debugging",
+              text: "Додай логування до фрагмента коду для налагодження.",
             },
           ],
         });

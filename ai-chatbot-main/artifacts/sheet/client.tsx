@@ -14,7 +14,7 @@ type Metadata = any;
 
 export const sheetArtifact = new Artifact<"sheet", Metadata>({
   kind: "sheet",
-  description: "Useful for working with spreadsheets",
+  description: "Корисно для роботи з таблицями",
   initialize: () => null,
   onStreamPart: ({ setArtifact, streamPart }) => {
     if (streamPart.type === "data-sheetDelta") {
@@ -40,7 +40,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
   actions: [
     {
       icon: <UndoIcon size={18} />,
-      description: "View Previous version",
+      description: "Переглянути попередню версію",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("prev");
       },
@@ -54,7 +54,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
     },
     {
       icon: <RedoIcon size={18} />,
-      description: "View Next version",
+      description: "Переглянути наступну версію",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("next");
       },
@@ -68,7 +68,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
     },
     {
       icon: <CopyIcon />,
-      description: "Copy as .csv",
+      description: "Копіювати як .csv",
       onClick: ({ content }) => {
         const parsed = parse<string[]>(content, { skipEmptyLines: true });
 
@@ -79,25 +79,25 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
         const cleanedCsv = unparse(nonEmptyRows);
 
         navigator.clipboard.writeText(cleanedCsv);
-        toast.success("Copied csv to clipboard!");
+        toast.success("Скопійовано csv в буфер обміну!");
       },
     },
   ],
   toolbar: [
     {
-      description: "Format and clean data",
+      description: "\u0424\u043e\u0440\u043c\u0430\u0442\u0443\u0432\u0430\u0442\u0438 \u0442\u0430 \u043e\u0447\u0438\u0441\u0442\u0438\u0442\u0438 \u0434\u0430\u043d\u0456",
       icon: <SparklesIcon />,
       onClick: ({ sendMessage }) => {
         sendMessage({
           role: "user",
           parts: [
-            { type: "text", text: "Can you please format and clean the data?" },
+            { type: "text", text: "Будь ласка, відформатуй і очисти дані." },
           ],
         });
       },
     },
     {
-      description: "Analyze and visualize data",
+      description: "\u0410\u043d\u0430\u043b\u0456\u0437\u0443\u0432\u0430\u0442\u0438 \u0442\u0430 \u0432\u0456\u0437\u0443\u0430\u043b\u0456\u0437\u0443\u0432\u0430\u0442\u0438 \u0434\u0430\u043d\u0456",
       icon: <LineChartIcon />,
       onClick: ({ sendMessage }) => {
         sendMessage({
@@ -105,7 +105,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
           parts: [
             {
               type: "text",
-              text: "Can you please analyze and visualize the data by creating a new code artifact in python?",
+              text: "Будь ласка, проаналізуй та візуалізуй дані, створивши новий кодовий артефакт на Python.",
             },
           ],
         });

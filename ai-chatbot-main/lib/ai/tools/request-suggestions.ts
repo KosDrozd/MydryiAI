@@ -18,12 +18,12 @@ export const requestSuggestions = ({
 }: RequestSuggestionsProps) =>
   tool({
     description:
-      "Request writing suggestions for an existing document artifact. Only use this when the user explicitly asks to improve or get suggestions for a document they have already created. Never use for general questions.",
+      "Запитувати пропозиції щодо покращення написаного документа. Використовувати лише коли користувач явно просить покращити документ. Не застосовувати для загальних питань.",
     inputSchema: z.object({
       documentId: z
         .string()
         .describe(
-          "The UUID of an existing document artifact that was previously created with createDocument"
+          "UUID існуючого документа, що був раніше створений через createDocument"
         ),
     }),
     execute: async ({ documentId }) => {
@@ -31,7 +31,7 @@ export const requestSuggestions = ({
 
       if (!document || !document.content) {
         return {
-          error: "Document not found",
+          error: "Документ не знайдено",
         };
       }
 
@@ -43,15 +43,15 @@ export const requestSuggestions = ({
       const { partialOutputStream } = streamText({
         model: getArtifactModel(),
         system:
-          "You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.",
+          "Ви — помічник з редагування тексту. Отримавши фрагмент письма, запропонуйте покращення та опишіть зміни. Важливо, щоб виправлення були повними реченнями, а не окремими словами. Максимум 5 пропозицій.",
         prompt: document.content,
         output: Output.array({
           element: z.object({
-            originalSentence: z.string().describe("The original sentence"),
-            suggestedSentence: z.string().describe("The suggested sentence"),
+            originalSentence: z.string().describe("Оригінальне речення"),
+            suggestedSentence: z.string().describe("Запропоноване речення"),
             description: z
               .string()
-              .describe("The description of the suggestion"),
+              .describe("Опис пропозиції"),
           }),
         }),
       });
@@ -91,7 +91,6 @@ export const requestSuggestions = ({
           processedCount++;
         }
       }
-
       if (session.user?.id) {
         const userId = session.user.id;
 
@@ -109,7 +108,7 @@ export const requestSuggestions = ({
         id: documentId,
         title: document.title,
         kind: document.kind,
-        message: "Suggestions have been added to the document",
+        message: "Пропозиції додано до документа",
       };
     },
   });

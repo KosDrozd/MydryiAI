@@ -38,9 +38,9 @@ export function SidebarUserNav({ user }: { user: User }) {
               <SidebarMenuButton className="h-10 justify-between bg-background data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                 <div className="flex flex-row gap-2">
                   <div className="size-6 animate-pulse rounded-full bg-zinc-500/30" />
-                  <span className="animate-pulse rounded-md bg-zinc-500/30 text-transparent">
-                    Loading auth status
-                  </span>
+                    <span className="animate-pulse rounded-md bg-zinc-500/30 text-transparent">
+                      Завантаження статусу автентифікації
+                    </span>
                 </div>
                 <div className="animate-spin text-zinc-500">
                   <LoaderIcon />
@@ -59,7 +59,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                   width={24}
                 />
                 <span className="truncate" data-testid="user-email">
-                  {isGuest ? "Guest" : user?.email}
+                  {isGuest ? "Гість" : user?.email}
                 </span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>
@@ -77,7 +77,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 setTheme(resolvedTheme === "dark" ? "light" : "dark")
               }
             >
-              {`Toggle ${resolvedTheme === "light" ? "dark" : "light"} mode`}
+                {resolvedTheme === "light" ? "Увімкнути темний режим" : "Увімкнути світлий режим"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
@@ -88,7 +88,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                     toast({
                       type: "error",
                       description:
-                        "Checking authentication status, please try again!",
+                        "Перевірка статусу автентифікації, будь ласка, спробуйте ще раз!",
                     });
 
                     return;
@@ -104,7 +104,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 }}
                 type="button"
               >
-                {isGuest ? "Login to your account" : "Sign out"}
+                {isGuest ? "Увійдіть у свій акаунт" : "Вийти"}
               </button>
             </DropdownMenuItem>
           </DropdownMenuContent>

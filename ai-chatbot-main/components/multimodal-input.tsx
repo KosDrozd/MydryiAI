@@ -206,7 +206,7 @@ function PureMultimodalInput({
       const { error } = await response.json();
       toast.error(error);
     } catch (_error) {
-      toast.error("Failed to upload file, please try again!");
+      toast.error("Не вдалося завантажити файл, спробуйте ще раз!");
     }
   }, []);
 
@@ -276,7 +276,7 @@ function PureMultimodalInput({
         ]);
       } catch (error) {
         console.error("Error uploading pasted images:", error);
-        toast.error("Failed to upload pasted image(s)");
+        toast.error("Не вдалося завантажити вставлені зображення");
       } finally {
         setUploadQueue([]);
       }
@@ -364,7 +364,7 @@ function PureMultimodalInput({
             maxHeight={200}
             minHeight={44}
             onChange={handleInput}
-            placeholder="Send a message..."
+            placeholder="Напишіть повідомлення..."
             ref={textareaRef}
             rows={1}
             value={input}

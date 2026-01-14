@@ -153,9 +153,9 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
           router.refresh();
         }
 
-        return "Chat deleted successfully";
+        return "Чат видалено успішно";
       },
-      error: "Failed to delete chat",
+      error: "Не вдалося видалити чат",
     });
   };
 
@@ -164,7 +164,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <div className="flex w-full flex-row items-center justify-center gap-2 px-2 text-sm text-zinc-500">
-            Login to save and revisit previous chats!
+            Ввійдіть, щоб зберігати та відкрити попередні чати!
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -205,7 +205,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <div className="flex w-full flex-row items-center justify-center gap-2 px-2 text-sm text-zinc-500">
-            Your conversations will appear here once you start chatting!
+            Ваші розмови з'являться тут, щойно ви почнете спілкуватися!
           </div>
         </SidebarGroupContent>
       </SidebarGroup>

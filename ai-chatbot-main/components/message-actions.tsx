@@ -36,12 +36,12 @@ export function PureMessageActions({
 
   const handleCopy = async () => {
     if (!textFromParts) {
-      toast.error("There's no text to copy!");
+      toast.error("Немає тексту для копіювання!");
       return;
     }
 
     await copyToClipboard(textFromParts);
-    toast.success("Copied to clipboard!");
+    toast.success("Скопійовано до буфера обміну!");
   };
 
   // User messages get edit (on hover) and copy actions
@@ -54,12 +54,12 @@ export function PureMessageActions({
               className="-left-10 absolute top-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover/message:opacity-100"
               data-testid="message-edit-button"
               onClick={() => setMode("edit")}
-              tooltip="Edit"
+              tooltip="Редагувати"
             >
               <PencilEditIcon />
             </Action>
           )}
-          <Action onClick={handleCopy} tooltip="Copy">
+          <Action onClick={handleCopy} tooltip="Копіювати">
             <CopyIcon />
           </Action>
         </div>
@@ -87,7 +87,7 @@ export function PureMessageActions({
           });
 
           toast.promise(upvote, {
-            loading: "Upvoting Response...",
+            loading: "Оцінювання відповіді...",
             success: () => {
               mutate<Vote[]>(
                 `/api/vote?chatId=${chatId}`,
@@ -112,12 +112,12 @@ export function PureMessageActions({
                 { revalidate: false }
               );
 
-              return "Upvoted Response!";
+              return "Відповідь оцінена позитивно!";
             },
-            error: "Failed to upvote response.",
+            error: "Не вдалося оцінити відповідь.",
           });
         }}
-        tooltip="Upvote Response"
+        tooltip="Позитивна оцінка"
       >
         <ThumbUpIcon />
       </Action>
@@ -136,7 +136,7 @@ export function PureMessageActions({
           });
 
           toast.promise(downvote, {
-            loading: "Downvoting Response...",
+            loading: "Оцінювання відповіді...",
             success: () => {
               mutate<Vote[]>(
                 `/api/vote?chatId=${chatId}`,
@@ -161,12 +161,12 @@ export function PureMessageActions({
                 { revalidate: false }
               );
 
-              return "Downvoted Response!";
+              return "Відповідь оцінена негативно!";
             },
-            error: "Failed to downvote response.",
+            error: "Не вдалося оцінити відповідь.",
           });
         }}
-        tooltip="Downvote Response"
+        tooltip="Негативна оцінка"
       >
         <ThumbDownIcon />
       </Action>

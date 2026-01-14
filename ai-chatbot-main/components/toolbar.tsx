@@ -143,12 +143,12 @@ const ReadingLevelSelector = ({
   sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
 }) => {
   const LEVELS = [
-    "Elementary",
-    "Middle School",
-    "Keep current level",
-    "High School",
-    "College",
-    "Graduate",
+    "Початковий",
+    "Середній (шкільний)",
+    "Залишити поточний рівень",
+    "Старша школа",
+    "Коледж/університет",
+    "Магістратура",
   ];
 
   const y = useMotionValue(-40 * 2);
@@ -205,7 +205,7 @@ const ReadingLevelSelector = ({
                     parts: [
                       {
                         type: "text",
-                        text: `Please adjust the reading level to ${LEVELS[currentLevel]} level.`,
+                        text: `Будь ласка, підкорегуйте рівень читання до рівня ${LEVELS[currentLevel]}.`,
                       },
                     ],
                   });

@@ -66,7 +66,7 @@ export class ChatSDKError extends Error {
       });
 
       return Response.json(
-        { code: "", message: "Something went wrong. Please try again later." },
+        { code: "", message: "Щось пішло не так. Будь ласка, спробуйте ще раз пізніше." },
         { status: statusCode }
       );
     }
@@ -77,43 +77,43 @@ export class ChatSDKError extends Error {
 
 export function getMessageByErrorCode(errorCode: ErrorCode): string {
   if (errorCode.includes("database")) {
-    return "An error occurred while executing a database query.";
+    return "Під час виконання запиту до бази даних сталася помилка.";
   }
 
   switch (errorCode) {
     case "bad_request:api":
-      return "The request couldn't be processed. Please check your input and try again.";
+      return "Запит не може бути оброблений. Перевірте введені дані та спробуйте ще раз.";
 
     case "bad_request:activate_gateway":
-      return "AI Gateway requires a valid credit card on file to service requests. Please visit https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card to add a card and unlock your free credits.";
+      return "AI Gateway вимагає дійсну кредитну картку для обробки запитів. Будь ласка, додайте картку за посиланням https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card, щоб розблокувати ваші безкоштовні кредити.";
 
     case "unauthorized:auth":
-      return "You need to sign in before continuing.";
+      return "Вам потрібно увійти в систему, щоб продовжити.";
     case "forbidden:auth":
-      return "Your account does not have access to this feature.";
+      return "Ваш акаунт не має доступу до цієї функції.";
 
     case "rate_limit:chat":
-      return "You have exceeded your maximum number of messages for the day. Please try again later.";
+      return "Ви перевищили максимальну кількість повідомлень на день. Будь ласка, спробуйте пізніше.";
     case "not_found:chat":
-      return "The requested chat was not found. Please check the chat ID and try again.";
+      return "Запитуваний чат не знайдено. Перевірте ID чату і спробуйте ще раз.";
     case "forbidden:chat":
-      return "This chat belongs to another user. Please check the chat ID and try again.";
+      return "Цей чат належить іншому користувачеві. Перевірте ID чату і спробуйте ще раз.";
     case "unauthorized:chat":
-      return "You need to sign in to view this chat. Please sign in and try again.";
+      return "Вам потрібно увійти, щоб переглянути цей чат. Будь ласка, увійдіть і спробуйте ще раз.";
     case "offline:chat":
-      return "We're having trouble sending your message. Please check your internet connection and try again.";
+      return "Сталась проблема з відправкою вашого повідомлення. Перевірте інтернет-з'єднання і спробуйте ще раз.";
 
     case "not_found:document":
-      return "The requested document was not found. Please check the document ID and try again.";
+      return "Запитуваний документ не знайдено. Перевірте ID документа і спробуйте ще раз.";
     case "forbidden:document":
-      return "This document belongs to another user. Please check the document ID and try again.";
+      return "Цей документ належить іншому користувачеві. Перевірте ID документа і спробуйте ще раз.";
     case "unauthorized:document":
-      return "You need to sign in to view this document. Please sign in and try again.";
+      return "Вам потрібно увійти, щоб переглянути цей документ. Будь ласка, увійдіть і спробуйте ще раз.";
     case "bad_request:document":
-      return "The request to create or update the document was invalid. Please check your input and try again.";
+      return "Запит на створення або оновлення документа некоректний. Перевірте введені дані та спробуйте ще раз.";
 
     default:
-      return "Something went wrong. Please try again later.";
+      return "Щось пішло не так. Будь ласка, спробуйте ще раз пізніше.";
   }
 }
 

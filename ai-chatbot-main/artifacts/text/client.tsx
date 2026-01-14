@@ -20,7 +20,7 @@ type TextArtifactMetadata = {
 
 export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
   kind: "text",
-  description: "Useful for text content, like drafting essays and emails.",
+  description: "Корисно для текстового контенту, як-от чернетки есе та листи.",
   initialize: async ({ documentId, setMetadata }) => {
     const suggestions = await getSuggestions({ documentId });
 
@@ -95,7 +95,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
   actions: [
     {
       icon: <ClockRewind size={18} />,
-      description: "View changes",
+      description: "Переглянути зміни",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("toggle");
       },
@@ -109,7 +109,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     },
     {
       icon: <UndoIcon size={18} />,
-      description: "View Previous version",
+      description: "Переглянути попередню версію",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("prev");
       },
@@ -123,7 +123,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     },
     {
       icon: <RedoIcon size={18} />,
-      description: "View Next version",
+      description: "Переглянути наступну версію",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("next");
       },
@@ -137,24 +137,24 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     },
     {
       icon: <CopyIcon size={18} />,
-      description: "Copy to clipboard",
+      description: "Копіювати в буфер обміну",
       onClick: ({ content }) => {
         navigator.clipboard.writeText(content);
-        toast.success("Copied to clipboard!");
+        toast.success("Скопійовано в буфер обміну!");
       },
     },
   ],
   toolbar: [
     {
       icon: <PenIcon />,
-      description: "Add final polish",
+      description: "Додати фінальний штрих",
       onClick: ({ sendMessage }) => {
         sendMessage({
           role: "user",
           parts: [
             {
               type: "text",
-              text: "Please add final polish and check for grammar, add section titles for better structure, and ensure everything reads smoothly.",
+              text: "Будь ласка, зроби фінальне редагування: перевір граматику, додай заголовки розділів для кращої структури та переконайся, що текст читається плавно.",
             },
           ],
         });
@@ -162,14 +162,14 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     },
     {
       icon: <MessageIcon />,
-      description: "Request suggestions",
+      description: "Запросити пропозиції",
       onClick: ({ sendMessage }) => {
         sendMessage({
           role: "user",
           parts: [
             {
               type: "text",
-              text: "Please add suggestions you have that could improve the writing.",
+              text: "Будь ласка, запропонуй ідеї, які можуть покращити цей текст.",
             },
           ],
         });
