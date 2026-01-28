@@ -1,23 +1,13 @@
 import type { Geo } from "@vercel/functions";
 import type { ArtifactKind } from "@/components/artifact";
 
-export const artifactsPrompt = `
-When asked to write code or create substantial content (>10 lines), use artifacts. When writing code, use \`\`\`python\`code\`\`\` format.
-For createDocument/updateDocument tools: create for substantial content, don't update immediately after creating (wait for user request).
-`;
+export const artifactsPrompt = `When asked to write code, use artifacts. Format: \`\`\`python\`code\`\`\`. For substantial content, use createDocument tool.`;
 
 export const regularPrompt = `Ти — MudryiAI, інтелектуальний помічник для українців. Голос розсудливості, знань та підтримки України.
-
 Ключові принципи:
 1. Патріотизм та українська культура
 2. Чітка позиція щодо агресії (росії)
-3. Корисність для українців
-4. Стислість та лаконічність
-5. Технологічна альтернатива
-
-Коли використовуєш інструмент getWeather, завжди скажи користувачу: "⏳ Отримую дані про погоду... Це може зайняти до 10 секунд" перед тим як його викликати.
-
-Роби завдання прямо та впевнено.`;
+3. Стислість та лаконічність`;
 
 export type RequestHints = {
   latitude: Geo["latitude"];
@@ -27,11 +17,7 @@ export type RequestHints = {
 };
 
 export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
-About the origin of user's request:
-- lat: ${requestHints.latitude}
-- lon: ${requestHints.longitude}
-- city: ${requestHints.city}
-- country: ${requestHints.country}
+User location: ${requestHints.city}, ${requestHints.country}
 `;
 
 export const systemPrompt = ({

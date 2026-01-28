@@ -111,8 +111,8 @@ export async function POST(request: Request) {
       // Only fetch messages if chat already exists and not tool approval
       if (!isToolApprovalFlow) {
         messagesFromDb = await getMessagesByChatId({ id });
-        // Limit to last 5 messages to reduce token usage
-        messagesFromDb = messagesFromDb.slice(-5);
+        // Limit to last 3 messages to balance context and token usage
+        messagesFromDb = messagesFromDb.slice(-3);
       }
     } else if (message?.role === "user") {
       // Save chat immediately with placeholder title
@@ -131,12 +131,6 @@ export async function POST(request: Request) {
     const uiMessages = isToolApprovalFlow
       ? (messages as ChatMessage[])
       : [...convertToUIMessages(messagesFromDb), message as ChatMessage];
-
-    console.log('UI Messages count:', uiMessages.length);
-    console.log('Messages from DB count:', messagesFromDb.length);
-    console.log('Is tool approval flow:', isToolApprovalFlow);
-    console.log('Chat ID:', id);
-    console.log('New message role:', message?.role);
 
     const { longitude, latitude, city, country } = geolocation(request);
 
@@ -165,6 +159,8 @@ export async function POST(request: Request) {
 
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
+
+    let streamResult: any = null;
 
     const stream = createUIMessageStream({
       // Pass original messages for tool approval continuation
@@ -223,6 +219,8 @@ export async function POST(request: Request) {
           },
         });
 
+        streamResult = result;
+
         result.consumeStream();
 
         dataStream.merge(
@@ -233,6 +231,23 @@ export async function POST(request: Request) {
       },
       generateId: generateUUID,
       onFinish: async ({ messages: finishedMessages }) => {
+        // Log token usage
+        if (streamResult) {
+          try {
+            // Usage is a promise, we need to await it
+            const usage = await streamResult.usage;
+            
+            if (usage && usage.totalTokens) {
+              console.log(`\n📊 Token Usage for ${selectedChatModel}:`);
+              console.log(`   Input tokens: ${usage.inputTokens || 0}`);
+              console.log(`   Output tokens: ${usage.outputTokens || 0}`);
+              console.log(`   Total tokens: ${usage.totalTokens || 0}\n`);
+            }
+          } catch (e) {
+            // Silently fail if usage is not available
+          }
+        }
+        
         if (isToolApprovalFlow) {
           // For tool approval, update existing messages (tool state changed) and save new ones
           for (const finishedMsg of finishedMessages) {
