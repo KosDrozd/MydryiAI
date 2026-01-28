@@ -35,7 +35,7 @@ export function getLanguageModel(modelId: string) {
   // ВАЖЛИВО: Перевіряємо, чи modelId не порожній
   let model = modelId;
   if (!model || model.trim() === "") {
-    model = process.env.NEXT_PUBLIC_MODEL || MODEL_ID;
+    model =  MODEL_ID;
   }
 
   // ВАЖЛИВО: Видаляємо "openai/", щоб Groq зрозумів назву моделі
