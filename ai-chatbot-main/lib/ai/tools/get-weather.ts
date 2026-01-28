@@ -40,7 +40,7 @@ export const getWeather = tool({
       .describe("Назва міста (наприклад, 'Київ', 'Львів', 'Одеса')")
       .optional(),
   }),
-  needsApproval: true,
+  needsApproval: false,
   execute: async (input) => {
     let latitude: number;
     let longitude: number;

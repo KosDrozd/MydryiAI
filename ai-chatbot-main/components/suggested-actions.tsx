@@ -17,20 +17,19 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const suggestedActions = [
     "Останні новини в Україні",
     "Розкажи про маловідомі факти з історії України",
-    "Покажи видатні місця України",
     "Порадь цікавий український фільм або серіал на вечір",
   ];
 
   return (
     <div
-      className="grid w-full gap-2 sm:grid-cols-2"
+      className="grid w-full gap-1 sm:grid-cols-2"
       data-testid="suggested-actions"
     >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 10, y: 10 }}
+          exit={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 10 }}
           key={suggestedAction}
           transition={{ delay: 0.05 * index }}
         >
