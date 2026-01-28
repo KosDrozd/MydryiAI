@@ -111,6 +111,8 @@ export async function POST(request: Request) {
       // Only fetch messages if chat already exists and not tool approval
       if (!isToolApprovalFlow) {
         messagesFromDb = await getMessagesByChatId({ id });
+        // Limit to last 5 messages to reduce token usage
+        messagesFromDb = messagesFromDb.slice(-5);
       }
     } else if (message?.role === "user") {
       // Save chat immediately with placeholder title
