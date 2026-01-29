@@ -3,7 +3,6 @@ import {
   convertToModelMessages,
   createUIMessageStream,
   JsonToSseTransformStream,
-  smoothStream,
   stepCountIs,
   streamText,
 } from "ai";
@@ -12,8 +11,7 @@ import {
   createResumableStreamContext,
   type ResumableStreamContext,
 } from "resumable-stream";
-import { auth, type UserType } from "@/app/(auth)/auth";
-import { entitlementsByUserType } from "@/lib/ai/entitlements";
+import { auth } from "@/app/(auth)/auth";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
@@ -25,8 +23,9 @@ import {
   createStreamId,
   deleteChatById,
   getChatById,
-  getMessageCountByUserId,
   getMessagesByChatId,
+  getUserById,        // <-- Нова функція для отримання лімітів
+  updateUserUsage,    // <-- Нова функція для оновлення лічильника
   saveChat,
   saveMessages,
   updateChatTitleById,
@@ -34,6 +33,7 @@ import {
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import { generatePaymentUrl } from "@/lib/payment"; // <-- Функція оплати WayForPay
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
@@ -77,25 +77,52 @@ export async function POST(request: Request) {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
-    // DEBUG: Log selected model at the start of POST request
-    console.log('Selected Model:', selectedChatModel);
-
+    // 1. АВТОРИЗАЦІЯ
     const session = await auth();
 
-    if (!session?.user) {
-      return new ChatSDKError("unauthorized:chat").toResponse();
+    if (!session?.user?.id) {
+      return new Response("Unauthorized", { status: 401 });
     }
 
-    const userType: UserType = session.user.type;
-
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
-    });
-
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
-      return new ChatSDKError("rate_limit:chat").toResponse();
+    // 2. ОТРИМАННЯ ДАНИХ ЮЗЕРА (Перевірка лімітів та Premium)
+    const currentUser = await getUserById(session.user.id);
+    if (!currentUser) {
+      return new Response("User not found", { status: 404 });
     }
+
+    // Перевіряємо ліміти тільки для нових повідомлень від юзера
+    if (message?.role === "user") {
+      const today = new Date();
+      const lastDate = currentUser.lastMessageDate ? new Date(currentUser.lastMessageDate) : new Date(0);
+      
+      // Перевіряємо, чи це той самий день
+      const isSameDay = 
+        today.getDate() === lastDate.getDate() &&
+        today.getMonth() === lastDate.getMonth() &&
+        today.getFullYear() === lastDate.getFullYear();
+
+      // Скидаємо лічильник, якщо настав новий день
+      let currentCount = isSameDay ? (currentUser.dailyMessageCount || 0) : 0;
+
+      // Визначаємо ліміт (20 для Premium, 3 для Free)
+      const LIMIT = currentUser.isPremium ? 20 : 3;
+
+      if (currentCount >= LIMIT) {
+        // Генеруємо посилання на оплату
+        const paymentLink = generatePaymentUrl(currentUser.id, currentUser.email);
+        
+        const errorMessage = currentUser.isPremium 
+          ? "Ви вичерпали ліміт 20 повідомлень на сьогодні. Спробуйте завтра!" 
+          : `Ліміт (3 повідомлення) вичерпано.\n\nЩоб отримати більше, підтримайте проект (40 грн/міс):\n${paymentLink}`;
+
+        return new Response(errorMessage, { status: 429 });
+      }
+
+      // Оновлюємо лічильник (+1)
+      await updateUserUsage(currentUser.id, currentCount + 1);
+    }
+
+    // --- ДАЛІ ЙДЕ СТАНДАРТНА ЛОГІКА ЧАТУ ---
 
     // Check if this is a tool approval flow (all messages sent)
     const isToolApprovalFlow = Boolean(messages);
@@ -108,40 +135,29 @@ export async function POST(request: Request) {
       if (chat.userId !== session.user.id) {
         return new ChatSDKError("forbidden:chat").toResponse();
       }
-      // Only fetch messages if chat already exists and not tool approval
       if (!isToolApprovalFlow) {
         messagesFromDb = await getMessagesByChatId({ id });
-        // Limit to last 3 messages to balance context and token usage
-        messagesFromDb = messagesFromDb.slice(-3);
+        // Limit context to last 10 messages for better performance/cost
+        messagesFromDb = messagesFromDb.slice(-10); 
       }
     } else if (message?.role === "user") {
-      // Save chat immediately with placeholder title
       await saveChat({
         id,
         userId: session.user.id,
         title: "New chat",
         visibility: selectedVisibilityType,
       });
-
-      // Start title generation in parallel (don't await)
       titlePromise = generateTitleFromUserMessage({ message });
     }
 
-    // Use all messages for tool approval, otherwise DB messages + new message
     const uiMessages = isToolApprovalFlow
       ? (messages as ChatMessage[])
       : [...convertToUIMessages(messagesFromDb), message as ChatMessage];
 
     const { longitude, latitude, city, country } = geolocation(request);
+    const requestHints: RequestHints = { longitude, latitude, city, country };
 
-    const requestHints: RequestHints = {
-      longitude,
-      latitude,
-      city,
-      country,
-    };
-
-    // Only save user messages to the database (not tool approval responses)
+    // Зберігаємо повідомлення юзера в БД
     if (message?.role === "user") {
       await saveMessages({
         messages: [
@@ -163,10 +179,8 @@ export async function POST(request: Request) {
     let streamResult: any = null;
 
     const stream = createUIMessageStream({
-      // Pass original messages for tool approval continuation
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
-        // Handle title generation in parallel
         if (titlePromise) {
           titlePromise.then((title) => {
             updateChatTitleById({ chatId: id, title });
@@ -178,10 +192,6 @@ export async function POST(request: Request) {
           selectedChatModel.includes("reasoning") ||
           selectedChatModel.includes("thinking");
 
-        console.log('🚀 About to call streamText with:');
-        console.log('  Model:', selectedChatModel);
-        console.log('  UI Messages for conversion:', uiMessages.length);
-        
         const modelMessages = await convertToModelMessages(uiMessages);
 
         const result = streamText({
@@ -220,9 +230,8 @@ export async function POST(request: Request) {
         });
 
         streamResult = result;
-
         result.consumeStream();
-
+        
         dataStream.merge(
           result.toUIMessageStream({
             sendReasoning: true,
@@ -231,35 +240,15 @@ export async function POST(request: Request) {
       },
       generateId: generateUUID,
       onFinish: async ({ messages: finishedMessages }) => {
-        // Log token usage
-        if (streamResult) {
-          try {
-            // Usage is a promise, we need to await it
-            const usage = await streamResult.usage;
-            
-            if (usage && usage.totalTokens) {
-              console.log(`\n📊 Token Usage for ${selectedChatModel}:`);
-              console.log(`   Input tokens: ${usage.inputTokens || 0}`);
-              console.log(`   Output tokens: ${usage.outputTokens || 0}`);
-              console.log(`   Total tokens: ${usage.totalTokens || 0}\n`);
-            }
-          } catch (e) {
-            // Silently fail if usage is not available
-          }
-        }
-        
         if (isToolApprovalFlow) {
-          // For tool approval, update existing messages (tool state changed) and save new ones
           for (const finishedMsg of finishedMessages) {
             const existingMsg = uiMessages.find((m) => m.id === finishedMsg.id);
             if (existingMsg) {
-              // Update existing message with new parts (tool state changed)
               await updateMessage({
                 id: finishedMsg.id,
                 parts: finishedMsg.parts,
               });
             } else {
-              // Save new message
               await saveMessages({
                 messages: [
                   {
@@ -275,7 +264,6 @@ export async function POST(request: Request) {
             }
           }
         } else if (finishedMessages.length > 0) {
-          // Normal flow - save all finished messages
           await saveMessages({
             messages: finishedMessages.map((currentMessage) => ({
               id: currentMessage.id,
@@ -311,13 +299,10 @@ export async function POST(request: Request) {
 
     return new Response(stream.pipeThrough(new JsonToSseTransformStream()));
   } catch (error) {
-    const vercelId = request.headers.get("x-vercel-id");
-
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
 
-    // Check for Vercel AI Gateway credit card error
     if (
       error instanceof Error &&
       error.message?.includes(
@@ -327,7 +312,7 @@ export async function POST(request: Request) {
       return new ChatSDKError("bad_request:activate_gateway").toResponse();
     }
 
-    console.error("Unhandled error in chat API:", error, { vercelId });
+    console.error("Unhandled error in chat API:", error);
     return new ChatSDKError("offline:chat").toResponse();
   }
 }

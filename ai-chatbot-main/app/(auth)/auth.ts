@@ -2,6 +2,7 @@ import { compare } from "bcrypt-ts";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google"; // <-- ДОДАЙ ЦЕЙ РЯДОК
 import { DUMMY_PASSWORD } from "@/lib/constants";
 import { createGuestUser, getUser } from "@/lib/db/queries";
 import { authConfig } from "./auth.config";
@@ -39,6 +40,7 @@ export const {
 } = NextAuth({
   ...authConfig,
   providers: [
+    Google,
     Credentials({
       credentials: {},
       async authorize({ email, password }: any) {

@@ -37,9 +37,7 @@ import { generateHashedPassword } from "./utils";
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+import { db } from '@/lib/db'; // <-- Імпортуємо з нашого нового файлу
 
 export async function getUser(email: string): Promise<User[]> {
   try {
@@ -583,6 +581,28 @@ export async function createStreamId({
   }
 }
 
+// Додай цю нову функцію
+export async function getUserById(id: string) {
+  try {
+    const [selectedUser] = await db.select().from(user).where(eq(user.id, id));
+    return selectedUser;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to get user by id");
+  }
+}
+
+// Додай цю нову функцію для оновлення лімітів
+export async function updateUserUsage(id: string, count: number) {
+  try {
+    return await db.update(user).set({
+      dailyMessageCount: count,
+      lastMessageDate: new Date(),
+    }).where(eq(user.id, id));
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to update user usage");
+  }
+}
+
 export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
   try {
     const streamIds = await db
@@ -598,5 +618,23 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
       "bad_request:database",
       "Failed to get stream ids by chat id"
     );
+  }
+}
+
+export async function upgradeUserToPremium(email: string, orderReference: string) {
+  try {
+    const [updatedUser] = await db
+      .update(user)
+      .set({
+        isPremium: true,
+        stripeCustomerId: orderReference, // Використаємо це поле для збереження ID транзакції
+      })
+      .where(eq(user.email, email))
+      .returning();
+
+    return updatedUser;
+  } catch (error) {
+    console.error("Failed to upgrade user to premium:", error);
+    throw new ChatSDKError("bad_request:database", "Failed to upgrade user");
   }
 }

@@ -2,6 +2,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   foreignKey,
+  integer, // <-- Додано цей імпорт
   json,
   pgTable,
   primaryKey,
@@ -15,6 +16,13 @@ export const user = pgTable("User", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   email: varchar("email", { length: 64 }).notNull(),
   password: varchar("password", { length: 64 }),
+  
+  // --- Нові поля для оплати та лімітів ---
+  isPremium: boolean("is_premium").default(false), // Статус підписки
+  stripeCustomerId: text("stripe_customer_id"),    // ID клієнта в Stripe
+  dailyMessageCount: integer("daily_message_count").default(0), // Лічильник повідомлень за день
+  lastMessageDate: timestamp("last_message_date"), // Дата останнього повідомлення
+  // ----------------------------------------
 });
 
 export type User = InferSelectModel<typeof user>;
