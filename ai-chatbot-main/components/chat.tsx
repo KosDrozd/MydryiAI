@@ -70,6 +70,9 @@ export function Chat({
 
   const [input, setInput] = useState<string>("");
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
+  const [showPremiumAlert, setShowPremiumAlert] = useState(false);
+  const [premiumMessage, setPremiumMessage] = useState<string>("");
+  const [paymentLink, setPaymentLink] = useState<string>("");
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
   const currentModelIdRef = useRef(currentModelId);
 
@@ -153,6 +156,21 @@ export function Chat({
           error.message?.includes("AI Gateway requires a valid credit card")
         ) {
           setShowCreditCardAlert(true);
+        } 
+        // Check if it's a rate limit/premium error (429)
+        else if (error.message?.includes("Ліміт") || error.message?.includes("вичерпано")) {
+          // Extract payment link if it's in the message
+          const linkMatch = error.message?.match(/(https:\/\/[^\s]+)/);
+          if (linkMatch) {
+            setPaymentLink(linkMatch[0]);
+            setPremiumMessage(error.message);
+            setShowPremiumAlert(true);
+          } else {
+            toast({
+              type: "error",
+              description: error.message,
+            });
+          }
         } else {
           toast({
             type: "error",
@@ -282,6 +300,33 @@ export function Chat({
               }}
             >
               Activate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        onOpenChange={setShowPremiumAlert}
+        open={showPremiumAlert}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Підтримайте проект</AlertDialogTitle>
+            <AlertDialogDescription>
+              {premiumMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (paymentLink) {
+                  window.open(paymentLink, "_blank");
+                }
+                setShowPremiumAlert(false);
+              }}
+            >
+              Перейти до оплати
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

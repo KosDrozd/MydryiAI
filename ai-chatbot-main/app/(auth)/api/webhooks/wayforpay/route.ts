@@ -6,21 +6,47 @@ import crypto from 'crypto';
 
 const SECRET_KEY = process.env.WAYFORPAY_SECRET!;
 
+// Типи для WayForPay webhook
+interface WayForPayWebhookData {
+  merchantAccount: string;
+  orderReference: string;
+  amount: string;
+  currency: string;
+  orderStatus?: string;
+  transactionStatus?: string;
+  email?: string;
+  clientAccountId?: string;
+  merchantSignature?: string;
+  signature?: string;
+  [key: string]: string | undefined;
+}
+
 export async function POST(req: Request) {
   try {
     const bodyText = await req.text();
-    let data;
+    let data: WayForPayWebhookData = {
+      merchantAccount: '',
+      orderReference: '',
+      amount: '',
+      currency: '',
+    };
 
     try {
       data = JSON.parse(bodyText);
     } catch (e) {
       const params = new URLSearchParams(bodyText);
-      data = Object.fromEntries(params);
+      data = {
+        ...data,
+        ...Object.fromEntries(params),
+      };
     }
 
-    console.log("💰 Webhook:", data.orderReference, data.transactionStatus);
+    console.log("💰 Webhook:", data.orderReference, data.transactionStatus || data.orderStatus);
 
-    if (data.transactionStatus === 'Approved') {
+    // Перевіряємо статус платежу
+    const isApproved = data.transactionStatus === 'Approved' || data.orderStatus === 'Approved';
+    
+    if (isApproved) {
       // ПРІОРИТЕТ 1: Шукаємо по ID (clientAccountId), який ми передали при генерації
       const userId = data.clientAccountId;
       
@@ -28,15 +54,15 @@ export async function POST(req: Request) {
       const userEmail = data.email;
 
       if (userId) {
-         await db.update(user)
+        await db.update(user)
           .set({ isPremium: true, stripeCustomerId: data.orderReference })
           .where(eq(user.id, userId)); // Оновлення по ID
-          console.log(`✅ Premium (by ID) for: ${userId}`);
+        console.log(`✅ Premium (by ID) for: ${userId}`);
       } else if (userEmail) {
-         await db.update(user)
+        await db.update(user)
           .set({ isPremium: true, stripeCustomerId: data.orderReference })
           .where(eq(user.email, userEmail)); // Оновлення по Email
-          console.log(`✅ Premium (by Email) for: ${userEmail}`);
+        console.log(`✅ Premium (by Email) for: ${userEmail}`);
       }
     }
 

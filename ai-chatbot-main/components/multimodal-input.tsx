@@ -4,6 +4,7 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
 import { CheckIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   type Dispatch,
@@ -86,6 +87,7 @@ function PureMultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const router = useRouter();
 
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
@@ -145,32 +147,49 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
 
   const submitForm = useCallback(() => {
-    window.history.pushState({}, "", `/chat/${chatId}`);
+    // Перевіряємо аутентифікацію
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        if (!response.ok) {
+          router.push("/login");
+          return;
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        router.push("/login");
+        return;
+      }
 
-    sendMessage({
-      role: "user",
-      parts: [
-        ...attachments.map((attachment) => ({
-          type: "file" as const,
-          url: attachment.url,
-          name: attachment.name,
-          mediaType: attachment.contentType,
-        })),
-        {
-          type: "text",
-          text: input,
-        },
-      ],
-    });
+      window.history.pushState({}, "", `/chat/${chatId}`);
 
-    setAttachments([]);
-    setLocalStorageInput("");
-    resetHeight();
-    setInput("");
+      sendMessage({
+        role: "user",
+        parts: [
+          ...attachments.map((attachment) => ({
+            type: "file" as const,
+            url: attachment.url,
+            name: attachment.name,
+            mediaType: attachment.contentType,
+          })),
+          {
+            type: "text",
+            text: input,
+          },
+        ],
+      });
 
-    if (width && width > 768) {
-      textareaRef.current?.focus();
-    }
+      setAttachments([]);
+      setLocalStorageInput("");
+      resetHeight();
+      setInput("");
+
+      if (width && width > 768) {
+        textareaRef.current?.focus();
+      }
+    };
+
+    checkAuth();
   }, [
     input,
     setInput,
@@ -181,6 +200,7 @@ function PureMultimodalInput({
     width,
     chatId,
     resetHeight,
+    router,
   ]);
 
   const uploadFile = useCallback(async (file: File) => {
