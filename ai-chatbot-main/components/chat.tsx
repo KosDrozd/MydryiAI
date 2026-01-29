@@ -76,6 +76,13 @@ export function Chat({
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
   const currentModelIdRef = useRef(currentModelId);
 
+  const getPremiumText = (message: string) => {
+    return message
+      .replace(/https:\/\/[^\s]+/g, "")
+      .replace(/\n\n+/g, "\n\n")
+      .trim();
+  };
+
   useEffect(() => {
     currentModelIdRef.current = currentModelId;
   }, [currentModelId]);
@@ -151,30 +158,34 @@ export function Chat({
     },
     onError: (error) => {
       if (error instanceof ChatSDKError) {
+        const errorMessage =
+          typeof error.cause === "string" && error.cause.length > 0
+            ? error.cause
+            : error.message;
         // Check if it's a credit card error
         if (
-          error.message?.includes("AI Gateway requires a valid credit card")
+          errorMessage?.includes("AI Gateway requires a valid credit card")
         ) {
           setShowCreditCardAlert(true);
         } 
         // Check if it's a rate limit/premium error (429)
-        else if (error.message?.includes("Ліміт") || error.message?.includes("вичерпано")) {
+        else if (errorMessage?.includes("Ліміт") || errorMessage?.includes("вичерпано")) {
           // Extract payment link if it's in the message
-          const linkMatch = error.message?.match(/(https:\/\/[^\s]+)/);
+          const linkMatch = errorMessage?.match(/(https:\/\/[^\s]+)/);
           if (linkMatch) {
             setPaymentLink(linkMatch[0]);
-            setPremiumMessage(error.message);
+            setPremiumMessage(getPremiumText(errorMessage));
             setShowPremiumAlert(true);
           } else {
             toast({
               type: "error",
-              description: error.message,
+              description: errorMessage,
             });
           }
         } else {
           toast({
             type: "error",
-            description: error.message,
+            description: errorMessage,
           });
         }
       }
@@ -312,9 +323,19 @@ export function Chat({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Підтримайте проект</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="whitespace-pre-line">
               {premiumMessage}
             </AlertDialogDescription>
+            {paymentLink && (
+              <a
+                className="inline-flex items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+                href={paymentLink}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Відкрити посилання для оплати
+              </a>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Скасувати</AlertDialogCancel>

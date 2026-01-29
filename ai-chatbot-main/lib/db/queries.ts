@@ -50,6 +50,32 @@ export async function getUser(email: string): Promise<User[]> {
   }
 }
 
+export async function createUserIfNotExists(email: string): Promise<User> {
+  try {
+    const existing = await db.select().from(user).where(eq(user.email, email));
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const [inserted] = await db
+      .insert(user)
+      .values({ email })
+      .returning({
+        id: user.id,
+        email: user.email,
+        password: user.password,
+        isPremium: user.isPremium,
+        stripeCustomerId: user.stripeCustomerId,
+        dailyMessageCount: user.dailyMessageCount,
+        lastMessageDate: user.lastMessageDate,
+      });
+
+    return inserted;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to create user if not exists");
+  }
+}
+
 export async function createUser(email: string, password: string) {
   const hashedPassword = generateHashedPassword(password);
 
@@ -96,8 +122,10 @@ export async function saveChat({
       title,
       visibility,
     });
-  } catch (_error) {
-    throw new ChatSDKError("bad_request:database", "Failed to save chat");
+  } catch (error) {
+    console.error("saveChat error", { error, id, userId, title, visibility });
+    const message = error?.message ? `Failed to save chat: ${error.message}` : `Failed to save chat: ${String(error)}`;
+    throw new ChatSDKError("bad_request:database", message, { cause: error });
   }
 }
 

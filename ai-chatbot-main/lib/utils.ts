@@ -34,8 +34,26 @@ export async function fetchWithErrorHandlers(
     const response = await fetch(input, init);
 
     if (!response.ok) {
-      const { code, cause } = await response.json();
-      throw new ChatSDKError(code as ErrorCode, cause);
+      const responseClone = response.clone();
+      try {
+        const { code, cause } = await responseClone.json();
+        throw new ChatSDKError(code as ErrorCode, cause);
+      } catch (parseError) {
+        const text = await response.text();
+        const status = response.status;
+        const code: ErrorCode =
+          status === 401
+            ? "unauthorized:chat"
+            : status === 403
+              ? "forbidden:chat"
+              : status === 404
+                ? "not_found:chat"
+                : status === 429
+                  ? "rate_limit:chat"
+                  : "bad_request:chat";
+
+        throw new ChatSDKError(code, text || "");
+      }
     }
 
     return response;

@@ -25,6 +25,8 @@ import {
   getChatById,
   getMessagesByChatId,
   getUserById,        // <-- Нова функція для отримання лімітів
+  getUser,
+  createUserIfNotExists,
   updateUserUsage,    // <-- Нова функція для оновлення лічильника
   saveChat,
   saveMessages,
@@ -65,49 +67,78 @@ export function getStreamContext() {
 
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
-
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
   } catch (_) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
-
   try {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
     // 1. АВТОРИЗАЦІЯ
     const session = await auth();
-
+    console.log(`[AUTH] session user id: ${session?.user?.id}, type: ${session?.user?.type}`);
     if (!session?.user?.id) {
       return new Response("Unauthorized", { status: 401 });
     }
-
     // 2. ОТРИМАННЯ ДАНИХ ЮЗЕРА (Перевірка лімітів та Premium)
-    const currentUser = await getUserById(session.user.id);
+    let currentUser = await getUserById(session.user.id);
+    if (!currentUser && session.user.email) {
+      console.log(`User not found by id (${session.user.id}), trying lookup by email: ${session.user.email}`);
+      const usersByEmail = await getUser(session.user.email);
+      if (usersByEmail && usersByEmail.length > 0) {
+        currentUser = usersByEmail[0];
+        console.log(`Found user by email: ${currentUser.id}`);
+      }
+    }
+
+    if (!currentUser) {
+      // If we still don't have a DB user, create one from the session email (social logins)
+      const sessionEmail = session.user.email;
+      if (sessionEmail) {
+        console.log(`Creating new user row for email: ${sessionEmail}`);
+        currentUser = await createUserIfNotExists(sessionEmail);
+      }
+    }
+
     if (!currentUser) {
       return new Response("User not found", { status: 404 });
     }
+    console.log(`[USER] ID: ${currentUser.id}, Email: ${currentUser.email}, Premium: ${currentUser.isPremium}, Count: ${currentUser.dailyMessageCount}, LastDate: ${currentUser.lastMessageDate}`);
 
     // Перевіряємо ліміти тільки для нових повідомлень від юзера
     if (message?.role === "user") {
       const today = new Date();
-      const lastDate = currentUser.lastMessageDate ? new Date(currentUser.lastMessageDate) : new Date(0);
+      today.setHours(0, 0, 0, 0); // Встановлюємо на початок дня
+      
+      const lastDate = currentUser.lastMessageDate ? new Date(currentUser.lastMessageDate) : null;
+      let lastDateStart = null;
+      if (lastDate) {
+        lastDateStart = new Date(lastDate);
+        lastDateStart.setHours(0, 0, 0, 0); // Встановлюємо на початок дня
+      }
       
       // Перевіряємо, чи це той самий день
-      const isSameDay = 
-        today.getDate() === lastDate.getDate() &&
-        today.getMonth() === lastDate.getMonth() &&
-        today.getFullYear() === lastDate.getFullYear();
+      const isSameDay = lastDateStart && lastDateStart.getTime() === today.getTime();
 
       // Скидаємо лічильник, якщо настав новий день
       let currentCount = isSameDay ? (currentUser.dailyMessageCount || 0) : 0;
+      
+      // Якщо день змінився - скидаємо в БД відразу
+      if (!isSameDay && currentUser.dailyMessageCount && currentUser.dailyMessageCount > 0) {
+        console.log(`[LIMITS] New day detected for ${currentUser.id}, resetting counter from ${currentUser.dailyMessageCount} to 0`);
+        await updateUserUsage(currentUser.id, 0);
+      }
 
       // Визначаємо ліміт (20 для Premium, 3 для Free)
       const LIMIT = currentUser.isPremium ? 20 : 3;
 
+      console.log(`[LIMITS] User: ${currentUser.id}, Current: ${currentCount}, Limit: ${LIMIT}, Premium: ${currentUser.isPremium}, LastDate: ${lastDate}, IsSameDay: ${isSameDay}`);
+
       if (currentCount >= LIMIT) {
+        console.log(`[LIMITS] Limit reached for ${currentUser.id}. Preparing premium message.`);
         // Генеруємо посилання на оплату
         const paymentLink = generatePaymentUrl(currentUser.id, currentUser.email);
         
@@ -115,10 +146,13 @@ export async function POST(request: Request) {
           ? "Ви вичерпали ліміт 20 повідомлень на сьогодні. Спробуйте завтра!" 
           : `Ліміт (3 повідомлення) вичерпано.\n\nЩоб отримати більше, підтримайте проект (40 грн/міс):\n${paymentLink}`;
 
+        console.log(`[LIMITS] Premium message payload: ${errorMessage}`);
+
         return new Response(errorMessage, { status: 429 });
       }
 
       // Оновлюємо лічильник (+1)
+      console.log(`[LIMITS] Updating usage for ${currentUser.id}: ${currentCount} -> ${currentCount + 1}`);
       await updateUserUsage(currentUser.id, currentCount + 1);
     }
 
@@ -132,7 +166,7 @@ export async function POST(request: Request) {
     let titlePromise: Promise<string> | null = null;
 
     if (chat) {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== currentUser.id) {
         return new ChatSDKError("forbidden:chat").toResponse();
       }
       if (!isToolApprovalFlow) {
@@ -143,7 +177,7 @@ export async function POST(request: Request) {
     } else if (message?.role === "user") {
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: currentUser.id,
         title: "New chat",
         visibility: selectedVisibilityType,
       });
