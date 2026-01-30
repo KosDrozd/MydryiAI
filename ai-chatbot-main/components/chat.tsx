@@ -72,9 +72,52 @@ export function Chat({
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
   const [showPremiumAlert, setShowPremiumAlert] = useState(false);
   const [premiumMessage, setPremiumMessage] = useState<string>("");
-  const [paymentLink, setPaymentLink] = useState<string>("");
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
   const currentModelIdRef = useRef(currentModelId);
+
+  const handlePayment = async () => {
+    try {
+      // Отримуємо дані для оплати з API
+      const response = await fetch("/api/payment", { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Не вдалося створити платіж");
+      }
+      
+      const paymentData = await response.json();
+      
+      console.log("[PAYMENT] Payment data:", paymentData);
+      
+      // Створюємо форму
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "https://secure.wayforpay.com/pay";
+      form.target = "_blank";
+      
+      // Додаємо всі поля
+      Object.entries(paymentData).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        const stringValue = Array.isArray(value) ? value.join(";") : String(value);
+        input.value = stringValue;
+        console.log(`[PAYMENT_FORM] ${key}=${stringValue}`);
+        form.appendChild(input);
+      });
+      
+      // Додаємо форму на сторінку, відправляємо і видаляємо
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      
+      setShowPremiumAlert(false);
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Помилка оплати",
+        description: "Не вдалося відкрити форму оплати. Спробуйте пізніше.",
+      });
+    }
+  };
 
   const getPremiumText = (message: string) => {
     return message
@@ -170,18 +213,8 @@ export function Chat({
         } 
         // Check if it's a rate limit/premium error (429)
         else if (errorMessage?.includes("Ліміт") || errorMessage?.includes("вичерпано")) {
-          // Extract payment link if it's in the message
-          const linkMatch = errorMessage?.match(/(https:\/\/[^\s]+)/);
-          if (linkMatch) {
-            setPaymentLink(linkMatch[0]);
-            setPremiumMessage(getPremiumText(errorMessage));
-            setShowPremiumAlert(true);
-          } else {
-            toast({
-              type: "error",
-              description: errorMessage,
-            });
-          }
+          setPremiumMessage(getPremiumText(errorMessage));
+          setShowPremiumAlert(true);
         } else {
           toast({
             type: "error",
@@ -326,27 +359,10 @@ export function Chat({
             <AlertDialogDescription className="whitespace-pre-line">
               {premiumMessage}
             </AlertDialogDescription>
-            {paymentLink && (
-              <a
-                className="inline-flex items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
-                href={paymentLink}
-                rel="noreferrer"
-                target="_blank"
-              >
-                Відкрити посилання для оплати
-              </a>
-            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Скасувати</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (paymentLink) {
-                  window.open(paymentLink, "_blank");
-                }
-                setShowPremiumAlert(false);
-              }}
-            >
+            <AlertDialogAction onClick={handlePayment}>
               Перейти до оплати
             </AlertDialogAction>
           </AlertDialogFooter>

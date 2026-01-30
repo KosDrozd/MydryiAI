@@ -35,7 +35,6 @@ import {
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import { generatePaymentUrl } from "@/lib/payment"; // <-- Функція оплати WayForPay
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
@@ -139,12 +138,10 @@ export async function POST(request: Request) {
 
       if (currentCount >= LIMIT) {
         console.log(`[LIMITS] Limit reached for ${currentUser.id}. Preparing premium message.`);
-        // Генеруємо посилання на оплату
-        const paymentLink = generatePaymentUrl(currentUser.id, currentUser.email);
         
         const errorMessage = currentUser.isPremium 
           ? "Ви вичерпали ліміт 20 повідомлень на сьогодні. Спробуйте завтра!" 
-          : `Ліміт (3 повідомлення) вичерпано.\n\nЩоб отримати більше, підтримайте проект (40 грн/міс):\n${paymentLink}`;
+          : `Ліміт вичерпано (3 безкоштовних повідомлення за день).\n\nЩоб отримати більше повідомлень, підтримайте проект:\n• 20 повідомлень/день\n• Premium підтримка\n• 40 грн/міс`;
 
         console.log(`[LIMITS] Premium message payload: ${errorMessage}`);
 

@@ -39,6 +39,7 @@ export const {
   signOut,
 } = NextAuth({
   ...authConfig,
+  trustHost: true, // Дозволяємо динамічне визначення URL з запиту
   providers: [
     Google,
     Credentials({
